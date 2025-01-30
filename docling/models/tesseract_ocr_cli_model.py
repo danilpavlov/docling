@@ -96,6 +96,7 @@ class TesseractOcrCliModel(BaseOcrModel):
             cmd.append(self.options.path)
 
         cmd += [ifilename, "stdout", "tsv"]
+        
         _log.info("command: {}".format(" ".join(cmd)))
 
         proc = Popen(cmd, stdout=PIPE, stderr=DEVNULL)
@@ -114,8 +115,11 @@ class TesseractOcrCliModel(BaseOcrModel):
         # _log.info("df: ", df.head())
 
         # Filter rows that contain actual text (ignore header or empty rows)
-        df_filtered = df[df["text"].notnull() & (df["text"].str.strip() != "")]
-
+        if any(df['text'].notnull()):
+            df_filtered = df[df["text"].notnull() & (df["text"].astype(str).str.strip() != "")]
+        else:
+            df_filtered = pd.DataFrame(columns=df.columns)
+        df_filtered['text'] = df_filtered['text'].astype(str)
         return df_filtered
 
     def _detect_language(self, ifilename: str):
